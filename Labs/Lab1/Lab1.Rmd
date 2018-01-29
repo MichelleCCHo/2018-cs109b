@@ -1,0 +1,85 @@
+---
+title: "Lab1"
+output: html_document
+---
+
+Your Turn: Play with the bands
+======================================
+
+Here is a snippet of code that creates a list containing information about three
+rock bands. 
+
+```{r}
+options(stringsAsFactors = FALSE)
+bands <- list(list(name = "The Jimi Hendrix Experience",
+                   years = 1966:1969,
+                   members = data.frame(name = c("Jimi Hendrix", "Noel Redding", "Mitch Mitchell"),
+                                        instrument = c("guitar", "bass", "drums"))),
+              list(name = "Nirvana",
+                   years = 1987:1994,
+                   members = data.frame(name = c("Kurt Cobain", "Krist Novoselic", "Dave Grohl"),
+                                        instrument = c("guitar", "bass", "drums"))),
+              list(name = "The White Stripes",
+                   years = 1997:2011,
+                   members = data.frame(name = c("Jack White", "Meg White"),
+                                        instrument = c("guitar", "oreos"))))
+```
+
+1. Extract the `years` element of the second band in the list.
+   * What class is it (integer, numeric, logical ...)?
+   * How many years was the band active?
+2. Extract the name of the bass player in the second band.
+3. Meg White played drums in the band "The White Stripes" (the third band in the
+   list). Correct the data to reflect this fact.
+4. (Advanced) Combine all three `members` elements into a single data.frame.
+5. (Advanced) Sort the combined data.frame by `instrument`. Break any ties by
+   sorting by `name`.
+   
+```{r}
+# 1. extract `years` from second band
+second_band <- bands[[2]]
+print(second_band$years)
+print(class(second_band$years))
+print(length(second_band$years))
+
+# 2. extract the name of the bass player in the second band
+second_band_members <- second_band$members
+print(second_band_members$name[second_band_members$instrument == "bass"])
+
+# 3. Correct Meg White info in the third band
+bands[[3]]$members$instrument[bands[[3]]$members$name == "Meg White"] <- "drums"
+print(bands[[3]])
+
+# 4. Combine all three members elements into a single data frame
+all_members <- rbind(bands[[1]]$members, bands[[2]]$members, bands[[3]]$members)
+print(all_members)
+
+# 5. Sort members by instrument
+sorted_members <- all_members[order(all_members$instrument, all_members$name), ]
+print(sorted_members)
+```
+
+Your Turn: Read and inspect data
+================================
+
+1. Using R, create a directory named `lab0data`.
+2. Using R, download the file at
+   `http://tutorials.iq.harvard.edu/example_data/hp1602.csv` to your
+   `lab0data` directory. Name the file "housingPriceIndex2016.csv". 
+3. Read the data into R, assigning the result to the name `housing`.
+4. (Advanced) The `.csv` file above was extracted from the Excel file at
+   `https://www.dallasfed.org/institute/houseprice/~/media/documents/institute/houseprice/hp1602.xlsx`
+   Use R to download this file.
+5. (Advanced) Open the file downloaded in step 4 in a spreadsheet application
+   and determine what needs to be done to read it into R. For example, which
+   sheet should be read? Do you need to skip some rows?
+6. (Advanced) Read the data downloaded in step 4 into R. 
+
+```{r}
+setwd("~/HARVARD/Courses/18S_CS109b/2018-cs109b/Labs/Lab1")
+dir.create("lab0data")
+download.file(url = "http://tutorials.iq.harvard.edu/example_data/hp1602.csv", destfile = "lab0data/housingPriceIndex2016.csv", method = "curl")
+housing = read.csv("lab0data/housingPriceIndex2016.csv")
+
+
+```
