@@ -192,7 +192,8 @@ Your turn: Get to know *lm*
    Do _not_ include the three way interaction.
 ```{r}
 ### YOUR SOLUTION HERE
-
+model2 <- lm(mpg ~ (cyl + disp + hp)^2, data = mtcars)
+model2
 ```
    
 2. Number of cylinders and displacement are so highly correlated that
@@ -201,7 +202,8 @@ Your turn: Get to know *lm*
    
 ```{r}
 ### YOUR SOLUTION HERE
-
+model3 <- lm(mpg ~ I(cyl + disp), data = mtcars)
+model3
 ```
    
 
@@ -211,7 +213,8 @@ Your turn: Get to know *lm*
    
 ```{r}
 ### YOUR SOLUTION HERE
-
+mod.mpg <- lm(mpg ~ disp, data = mtcars)
+mod.mpg.sum <- summary(mod.mpg)
 ```
 
 
@@ -219,7 +222,8 @@ Your turn: Get to know *lm*
 
 ```{r}
 ### YOUR SOLUTION HERE
-
+names(mod.mpg.sum)
+mod.mpg.sum$r.squared
 ```
 
 5. Graph the observed and predicted values of `mpg` as a function of
@@ -230,7 +234,10 @@ library(ggplot2)
 mtc <- transform(mtcars, pred.mpg = predict(mod.mpg))
 
 ### YOUR SOLUTION HERE
-
+ggplot(mtc, 
+       mapping = aes(x=disp, y=mpg)) + 
+  geom_point() +
+  geom_smooth(mapping = aes(y=pred.mpg), stat="identity")
 ```
 
    
@@ -239,6 +246,8 @@ mtc <- transform(mtcars, pred.mpg = predict(mod.mpg))
    
 ```{r}
 ### YOUR SOLUTION HERE
+logit.mod <- glm(am ~ disp, data=mtcars, family=binomial)
+logit.mod
 ```
 
 7. (Advanced) Fit a logistic model predicting *automatic vs.
@@ -248,7 +257,8 @@ mtc <- transform(mtcars, pred.mpg = predict(mod.mpg))
 
 ```{r}
 ### YOUR SOLUTION HERE
-
+logit.mod2 <- glm(am ~ disp + as.factor(gear), data = mtcars, family = binomial)
+logit.mod2
 ```
 
 8. (Advanced) Inference from linear regression models is based on
@@ -383,7 +393,7 @@ Your turn: Visualizing polynomial and spline regressions
    
 ```{r,error=T}
 ### YOUR SOLUTION HERE
-mod.mpg.ns3 <- 
+mod.mpg.ns3 <- lm(mpg ~ ns(hp, df = 3), data = mtcars)
 summary(mod.mpg.ns3)
 ```
 
@@ -391,7 +401,7 @@ summary(mod.mpg.ns3)
 
 ```{r,error=T}
 ### YOUR SOLUTION HERE
-mod.mpg.ns8 <- 
+mod.mpg.ns8 <- lm(mpg ~ ns(hp, df=8), data=mtcars)
 summary(mod.mpg.ns8)
 ```
 
@@ -399,15 +409,15 @@ summary(mod.mpg.ns8)
 
 ```{r,error=T}
 ### YOU FILL PREDICTIONS HERE
-mtcars$mpg.ns3 <- 
-mtcars$mpg.ns8 <- 
+mtcars$mpg.ns3 <- predict(mod.mpg.ns3)
+mtcars$mpg.ns8 <- predict(mod.mpg.ns8)
 
 
 ### Plot:
 ggplot(mtcars, aes(x = hp, y = mpg)) +
   geom_point() +
-  geom_line(aes(y = mpg.ns3,color='red'))+
-  geom_line(aes(y = mpg.ns8,color='blue'))
+  geom_line(aes(y = mpg.ns3, color='blue')) +
+  geom_line(aes(y = mpg.ns8, color='red'))
 ```
 
 
@@ -416,6 +426,15 @@ ggplot(mtcars, aes(x = hp, y = mpg)) +
 
 ```{r}
 ### YOUR SOLUTION HERE
+mod.mpg.ns3.int <- lm(mpg ~ ns(hp*am, df = 3), data=mtcars)
+summary(mod.mpg.ns3.int)
+mtcars$mpg.ns3.int <- predict(mod.mpg.ns3.int)
+
+ggplot(mtcars,
+       mapping = aes(x = hp, y = mpg, color = as.factor(am))) +
+    geom_point() +
+    geom_smooth(mapping = aes(y = mtcars$mpg.ns3.int),
+                stat = "identity")
 ```
 
 Selecting parameter values
@@ -611,7 +630,7 @@ write your own.
 
 ```{r,error=T}
 ### YOU FINISH CODE HERE
-train <- 
+train <- sample(1:nrow(mtcars), floor(nrow(mtcars) * 0.5))
 
 mt.train <- mtcars[train, ]
 mt.test <- mtcars[-train, ]
@@ -630,10 +649,12 @@ model.performance2 <- function(df, train, test) {
 
 ### YOU FINISH CODE HERE
 ?expand.grid
-dfs <-
+dfs <- 2:6
 names(dfs)<-c('df.hp','df.drat')
-
-ns.performance<- apply() 
+ns.performance<- sapply(dfs, model.performance2, 
+                       train = mt.train,
+                       test = mt.test,
+                       simplify = FALSE) 
   
 ```
 
