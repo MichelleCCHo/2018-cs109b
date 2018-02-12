@@ -209,11 +209,17 @@ tweet.num<-tweets[num.vars]
 
 1.  Calculate a distance matrix using euclidean distances for Trump's numerical Twitter data. Visualize this using the `fviz_dist` function (this takes a couple mins). How many clusters do you see?
 ```{r}
-
+tweet.dist<-daisy(tweet.num,metric='euclidean',stand=T)
+#takes about 2 mins....
+fviz_dist(tweet.dist)
 ```
 2.  Implement PCA on the numerical Twitter data. Visualize this using `autoplot`. How many clusters do you see?
 ```{r}
+tweet.pca<-prcomp(tweet.num,scale=T,center=T)
 
+autoplot(tweet.pca)+
+  geom_density2d()+
+  ggtitle('First 2 PCs of Trump Tweet Data')
 ```
 
 3. It is important to realize how much information we are reatining by looking at the first two PCs. 
@@ -221,6 +227,8 @@ Calculate the percent of variation we keep using the first two PCs.
 What does this mean?
 ```{r}
 ?cumsum
+tweet.eigs = tweet.pca$sdev^2
+cumsum(tweet.eigs)[2]/cumsum(tweet.eigs)[7]
 ```
 
 
