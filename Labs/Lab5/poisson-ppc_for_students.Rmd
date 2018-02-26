@@ -21,18 +21,27 @@ theme_set(bayesplot::theme_default())
 Load the count data into R by calling the "source" function on the file "count-data.R" that's provided in the lab materials. Create a variable called "N" that is equal to the number of observations in the count data. Print "N", the data "y", and create a histogram of "y". 
 ```{r count-data, fig.width = 4, fig.height = 4, message=FALSE}
 # Loads vector of counts 'y'
-
+source("count-data.R")
+N <- length(y)
+print(N)
+print(y)
+ggplot() + aes(y) + geom_histogram()
 ```
 
 We will now compare our data to draws from Poisson distribution with same mean. Calculate the mean of "y", then use the "rpois" function to draw "N" random samples from a Poisson with a lambda parameter equal to what you calculated. Then, plot the drawn data. 
 ```{r plot-x, fig.width = 4, fig.height = 4, message=FALSE}
 # create Poisson draws and plot 
-
+mean_y <- mean(y)
+x <- rpois(N, mean_y)
+ggplot() + aes(x) + geom_histogram()
 ```
 
 Create a dataframe titled "plotdata" that consists of both "y" and the sampled Poisson values "x". The dataframe should have two columns: one consisting of "y" and "x" concatenated together, and one consisting of a label representing whether that observation is from "Our data" or "Poisson data". After you create this dataframe, you should be able to visualize the data with the plot functions below. 
 ```{r plot-y-x, message=FALSE}
 # create plotdata
+value <- append(y,x)
+variable <- append(rep("Our data", N), rep("Poisson data", N))
+plotdata <- data.frame(value, variable) 
 
 # Frequency polygons
 ggplot(plotdata, aes(x = value, color = variable)) + 
@@ -67,9 +76,9 @@ Try your best to fill out the skeleton Stan code provided below for a simple Poi
 stan_code <- c("
 data {
   // Number of observations
-  // your code here
+  int N;
   // Count data (integer array)
-  // your code here 
+  int<lower=0> Y[N];
 }
 
 parameters {
@@ -78,10 +87,9 @@ parameters {
 
 model {
   // Prior
-  // your code here
-
+  lambda ~ exponential(0.1);
   // Likelihood
-  // your code here 
+  Y ~ poisson(lambda);
 }
 
 generated quantities {
@@ -190,14 +198,20 @@ Try writing the code for the normal model yourself!
 stan_code <- c("
 data {
   // write code here
+  int N;
+  real<lower=0> X[N];
 }
 
 parameters {
  // write code here
+  real mu;
+  real<lower=0> sigma;
 }
 
 model {
- // write code here
+  // write code here
+  // likelihood
+  X ~ normal(mu, sigma);
 }
 
 generated quantities {
@@ -219,4 +233,42 @@ fit <- stan(model_code = stan_code,
 
 Play around with some of the same plots used on the Poisson data. Does this model seem to fit the data well? 
 
+```{r, plot_convergence}
+plot(fit, plotfun="trace", pars='mu')
+plot(fit, plotfun="trace", pars='sigma')
+```
+```{r, plot_mu}
+color_scheme_set("brightblue") # check out bayesplot::color_scheme_set
+mu_draws <- as.matrix(fit, pars = "mu")
+mcmc_areas(mu_draws, prob = 0.95) # color 95% credible interval
+```
+```{r, plot_sigma}
+color_scheme_set("brightblue") # check out bayesplot::color_scheme_set
+sigma_draws <- as.matrix(fit, pars = "sigma")
+mcmc_areas(sigma_draws, prob = 0.95) # color 95% credible interval
+```
 
+Compare posterior of lambda to the mean of the data
+```{r, print_fit}
+means <- c("Posterior mean" = mean(mu_draws), "Data mean" = mean(X))
+print(means, digits = 3)
+```
+
+The model gets the mean right, but, as we'll see next, the model is quite bad
+at predicting the outcome.
+
+# Graphical posterior predictive checks
+Extract `y_rep` draws from the fitted model object
+```{r y_rep}
+y_rep <- as.matrix(fit, pars = "y_rep")
+```
+
+Compare histogram of `y` to histograms of several `y_rep`s
+```{r ppc-hist, message=FALSE}
+ppc_hist(y, y_rep[1:8, ], binwidth = 1)
+```
+
+Compare density estimate of `y` to density estimates of a bunch of `y_rep`s
+```{r ppc-dens-overlay}
+ppc_dens_overlay(y, y_rep[1:50, ])
+```
